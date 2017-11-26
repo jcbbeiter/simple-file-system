@@ -40,7 +40,7 @@ copyout 1 $SCRATCH/2.copy
 debug
 EOF
 echo -n "Testing copyin in $SCRATCH/image.20 ... "
-if [ $(md5sum $SCRATCH/2.copy | awk '{print $1}') = '0a8187e2cce1aa992adb5c8be8ce82ad' ] &&
+if [ $(md5sum $SCRATCH/2.copy | awk '{print $1}') = '1adf08d52e0f1a162a3a887a19fcf1f8' ] &&
    [ $(md5sum $SCRATCH/3.copy | awk '{print $1}') = 'd083a4be9fde347b98a8dbdfcc196819' ]; then
     echo "Success"
 else
@@ -70,7 +70,7 @@ EOF
 echo -n "Testing copyin in $SCRATCH/image.200 ... "
 if [ $(md5sum $SCRATCH/1.copy | awk '{print $1}') = '0af623d6d8cb0a514816e17c7386a298' ] &&
    [ $(md5sum $SCRATCH/2.copy | awk '{print $1}') = '307fe5cee7ac87c3b06ea5bda80301ee' ] &&
-   [ $(md5sum $SCRATCH/9.copy | awk '{print $1}') = '32fe956131b96f76275f7a942946eed8' ]; then
+   [ $(md5sum $SCRATCH/9.copy | awk '{print $1}') = 'fa4280d88da260281e509296fd2f3ea2' ]; then
     echo "Success"
 else
     echo "Failure"

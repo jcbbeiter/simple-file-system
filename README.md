@@ -12,13 +12,6 @@ Members
 Design
 ------
 
-Response.
-
-Demonstration
--------------
-
-> Place a link to your demonstration slides on [Google Drive].
-
 Errata
 ------
 

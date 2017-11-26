@@ -53,11 +53,13 @@ EOF
 }
 
 echo -n "Testing cat on data/image.5 ... "
-if diff -q <(image-5-input | ./bin/sfssh data/image.5 5 2> /dev/null | sort) <(image-5-output); then
+if diff -u <(image-5-input | ./bin/sfssh data/image.5 5 2> /dev/null | sort) <(image-5-output) > test.log; then
     echo "Success"
 else
     echo "Failure"
+    cat test.log
 fi
+rm -f test.log
 
 # Test data/image.20
 
@@ -217,7 +219,7 @@ image-20-output() {
 
 0 bytes copied
 0 disk block writes
-22 disk block reads
+21 disk block reads
 27160 bytes copied
 9546 bytes copied
    Abraham Clark
@@ -505,8 +507,10 @@ EOF
 }
 
 echo -n "Testing cat on data/image.20 ... "
-if diff -q <(image-20-input | ./bin/sfssh data/image.20 20 2> /dev/null | sort) <(image-20-output); then
+if diff -u <(image-20-input | ./bin/sfssh data/image.20 20 2> /dev/null | sort) <(image-20-output) > test.log; then
     echo "Success"
 else
     echo "Failure"
+    cat test.log
 fi
+rm -f test.log

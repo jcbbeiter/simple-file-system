@@ -36,14 +36,10 @@ private:
     };
 
     // TODO: Internal helper functions
-
-    Disk  *Device     = nullptr;    // Pointer to mounted disk
-    bool  *FreeBlocks = nullptr;    // Free block bitmap
-    SuperBlock MetaData;	    // File system metadata
+    
+    // TODO: Internal member variables
 
 public:
-    ~FileSystem() { delete [] FreeBlocks; }
-
     static void debug(Disk *disk);
     static bool format(Disk *disk);
 

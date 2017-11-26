@@ -27,10 +27,6 @@ void FileSystem::debug(Disk *disk) {
 // Format file system ----------------------------------------------------------
 
 bool FileSystem::format(Disk *disk) {
-    if (disk->mounted()) {
-    	return false;
-    }
-
     // Write superblock
 
     // Clear all other blocks
@@ -40,10 +36,6 @@ bool FileSystem::format(Disk *disk) {
 // Mount file system -----------------------------------------------------------
 
 bool FileSystem::mount(Disk *disk) {
-    if (Device != nullptr || disk->mounted()) {
-    	return false;
-    }
-
     // Read superblock
 
     // Set device and mount
@@ -61,6 +53,7 @@ ssize_t FileSystem::create() {
     // Locate free inode in inode table
 
     // Record inode if found
+    return 0;
 }
 
 // Remove inode ----------------------------------------------------------------
