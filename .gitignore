@@ -1,0 +1,11 @@
+*~
+*.o
+*.pyc
+*.swp
+*.exe
+*.so
+*.a
+
+# the build directory
+build
+bin
