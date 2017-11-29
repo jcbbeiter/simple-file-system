@@ -10,7 +10,7 @@
 #include <unistd.h>
 
 void Disk::open(const char *path, size_t nblocks) {
-    FileDescriptor = ::open(path, O_RDWR);
+    FileDescriptor = ::open(path, O_RDWR|O_CREAT, 0600);
     if (FileDescriptor < 0) {
     	char what[BUFSIZ];
     	snprintf(what, BUFSIZ, "Unable to open %s: %s", path, strerror(errno));
