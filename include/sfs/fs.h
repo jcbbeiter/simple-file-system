@@ -9,9 +9,9 @@
 class FileSystem {
 public:
     const static uint32_t MAGIC_NUMBER	     = 0xf0f03410;
-    const static uint32_t INODES_PER_BLOCK   = 0; // TODO: Number of inodes per block
-    const static uint32_t POINTERS_PER_INODE = 0; // TODO: Number of direct pointers per inode
-    const static uint32_t POINTERS_PER_BLOCK = 0; // TODO: Number of pointers per block
+    const static uint32_t INODES_PER_BLOCK   = 128;
+    const static uint32_t POINTERS_PER_INODE = 5;
+    const static uint32_t POINTERS_PER_BLOCK = 1024;
 
 private:
     struct SuperBlock {		// Superblock structure
@@ -36,7 +36,7 @@ private:
     };
 
     // TODO: Internal helper functions
-    
+
     // TODO: Internal member variables
 
 public:
