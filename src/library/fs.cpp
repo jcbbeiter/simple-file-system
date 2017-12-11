@@ -12,16 +12,33 @@
 
 void FileSystem::debug(Disk *disk) {
     Block block;
-
+    unsigned int direct;
     // Read Superblock
     disk->read(0, block.Data);
 
     printf("SuperBlock:\n");
+    if (block.Super.MagicNumber == MAGIC_NUMBER) {
+        printf("    magic number is valid\n");
+    } else {
+        printf("    magic number is invalid\n");
+    }
     printf("    %u blocks\n"         , block.Super.Blocks);
     printf("    %u inode blocks\n"   , block.Super.InodeBlocks);
     printf("    %u inodes\n"         , block.Super.Inodes);
 
     // Read Inode blocks
+    for (unsigned int i = 0; i < block.Super.Inodes; i++) {
+        direct = 0;
+        printf("Inode %u:\n", i+1);
+        printf("    size: %u bytes\n"    , block.Inodes[i].Size);
+        for (unsigned int j = 0; j < POINTERS_PER_INODE; j++) {
+            if (block.Inodes[i].Direct[j] != 0) {
+                direct += 1;
+            }
+        }
+        printf("    direct blocks: %u\n" , direct);
+        
+    }
 }
 
 // Format file system ----------------------------------------------------------
@@ -95,3 +112,5 @@ ssize_t FileSystem::write(size_t inumber, char *data, size_t length, size_t offs
     // Write block and copy to data
     return 0;
 }
+
+// vim: set sts=4 sw=4 ts=8 expandtab ft=cpp:
