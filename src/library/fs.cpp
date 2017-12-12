@@ -69,7 +69,16 @@ bool FileSystem::mount(Disk *disk) {
     if (disk->mounted()) {
         return false;
     }
+
+    if (block.Super.Inodes != block.Super.InodeBlocks * INODES_PER_BLOCK) {
+        return false;
+    }
+
+    if (block.Super.MagicNumber != MAGIC_NUMBER) {
+        return false;
+    }
     disk->mount();
+
     // Copy metadata
     num_blocks = block.Super.Blocks;
     num_inode_blocks = block.Super.InodeBlocks;
