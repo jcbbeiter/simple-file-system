@@ -142,6 +142,14 @@ bool FileSystem::mount(Disk *disk) {
         free_bitmap[i] = 1;
     }
 
+    // superblock is not free
+    free_bitmap[0] = 0;
+
+    // inode blocks are not free
+    for (unsigned int i = 0; i < num_inode_blocks; i++) {
+        free_bitmap[1+i] = 0;
+    }
+
     //TODO: read inodes to determine which blocks are free
     for (uint32_t inode_block = 0; inode_block < num_inode_blocks; inode_block++) {
         Block b;
@@ -188,9 +196,9 @@ ssize_t FileSystem::create() {
                 ind = inode + INODES_PER_BLOCK*inode_block;
                 break;
             }
-            if (ind != -1) {
-                break;
-            }
+        }
+        if (ind != -1) {
+            break;
         }
     }
 
@@ -367,7 +375,7 @@ ssize_t FileSystem::write(size_t inumber, char *data, size_t length, size_t offs
 
     // Write block and copy data
     size_t written = 0;
-    for (uint32_t block_num = start_block; written < length; block_num++) {
+    for (uint32_t block_num = start_block; written < length && block_num < POINTERS_PER_INODE + POINTERS_PER_BLOCK; block_num++) {
         
         // figure out which block we're reading
         size_t block_to_write;
@@ -378,6 +386,7 @@ ssize_t FileSystem::write(size_t inumber, char *data, size_t length, size_t offs
                 if (allocated_block == -1) {
                     break;
                 }
+                printf("allocated direct block %lu\n",allocated_block);
                 inode.Direct[block_num] = allocated_block;
                 modified_inode = true;
             }
@@ -389,6 +398,7 @@ ssize_t FileSystem::write(size_t inumber, char *data, size_t length, size_t offs
                 if (allocated_block == -1) {
                     return written;
                 }
+                printf("allocated indirect pointer block: %lu\n",allocated_block);
                 inode.Indirect = allocated_block;
                 modified_indirect = true;
             }
@@ -405,6 +415,7 @@ ssize_t FileSystem::write(size_t inumber, char *data, size_t length, size_t offs
                 if (allocated_block == -1) {
                     break;
                 }
+                printf("allocated indirect data block: %lu\n",allocated_block);
                 indirect.Pointers[block_num - POINTERS_PER_INODE] = allocated_block;
                 modified_indirect = true;
             }
@@ -436,6 +447,8 @@ ssize_t FileSystem::write(size_t inumber, char *data, size_t length, size_t offs
 
         // copy into buffer
         memcpy(write_buffer + write_offset, data + written, write_length);
+        printf("writing data to block %lu\n",block_to_write);
+        disk->write(block_to_write,(char*)write_buffer);
         written += write_length;
     }
 
@@ -452,10 +465,11 @@ ssize_t FileSystem::write(size_t inumber, char *data, size_t length, size_t offs
     }
      
     if (modified_indirect) {
+        printf("writing indirect block %u\n",inode.Indirect);
         disk->write(inode.Indirect,indirect.Data);
     }
 
-    
+    printf("write request was %lu, wrote %lu\n",length,written);
     return written;
 }
 
