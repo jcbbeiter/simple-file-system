@@ -62,8 +62,8 @@ void FileSystem::debug(Disk *disk) {
             printf("    size: %u bytes\n"    , block.Inodes[i].Size);
             if (direct.length() > 0) {
                 direct.pop_back();
-                printf("    direct blocks: %s\n" , direct.c_str());
             }
+            printf("    direct blocks: %s\n" , direct.c_str());
             if (indirect.length() > 0) {
                 indirect.pop_back();
                 printf("    indirect block: %u\n", indir);
@@ -85,7 +85,7 @@ bool FileSystem::format(Disk *disk) {
     block.Super.MagicNumber = MAGIC_NUMBER;
     block.Super.Blocks = disk->size();
     block.Super.InodeBlocks = (size_t)(((float)disk->size()*0.1)+0.5);
-    block.Super.Inodes = INODES_PER_BLOCK*disk->size();
+    block.Super.Inodes = INODES_PER_BLOCK*block.Super.InodeBlocks;
     disk->write(0, block.Data);
 
     // Clear all other blocks
