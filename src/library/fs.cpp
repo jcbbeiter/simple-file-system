@@ -96,27 +96,32 @@ bool FileSystem::format(Disk *disk) {
 // Mount file system -----------------------------------------------------------
 
 bool FileSystem::mount(Disk *disk) {
-    // Read superblock
-    Block block;
-    disk->read(0, block.Data);
 
-    // Set device and mount
+    // Make usre disk isn't mounted
     if (disk->mounted()) {
         return false;
     }
 
+    // Read superblock
+    Block block;
+    disk->read(0, block.Data);
+
+    // make sure inodes counts match
     if (block.Super.Inodes != block.Super.InodeBlocks * INODES_PER_BLOCK) {
         return false;
     }
 
+    // check magic number
     if (block.Super.MagicNumber != MAGIC_NUMBER) {
         return false;
     }
 
+    // make sure there are blocks
     if (block.Super.Blocks < 0) {
         return false;
     }
 
+    // check inode proportion
     if (block.Super.InodeBlocks != ceil(.1 * block.Super.Blocks)) {
         return false;
     }
