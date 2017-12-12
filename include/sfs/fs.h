@@ -39,6 +39,7 @@ private:
     // TODO: Internal helper functions
     bool    load_inode(size_t inumber, Inode *node);
     bool    save_inode(size_t inumber, Inode *node);
+    ssize_t allocate_free_block();
 
     // TODO: Internal member variables
     Disk *disk;
@@ -46,8 +47,6 @@ private:
     uint32_t num_inode_blocks;
     uint32_t num_inodes;
     std::vector<int> free_bitmap;
-    
-    
 
 public:
     static void debug(Disk *disk);
