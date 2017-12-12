@@ -239,16 +239,66 @@ ssize_t FileSystem::stat(size_t inumber) {
 
 ssize_t FileSystem::read(size_t inumber, char *data, size_t length, size_t offset) {
     // Load inode information
-    Inode i;
-    if (!load_inode(inumber, &i)) {
+    Inode inode;
+    if (!load_inode(inumber, &inode) || offset > inode.Size) {
         return -1;
     }
+
     // Adjust length
-    length = std::min(length, i.Size - offset);
+    length = std::min(length, inode.Size - offset);
+
+    uint32_t start_block = offset / disk->BLOCK_SIZE;
+
     // Read block and copy to data; use memcpy
+
+    // Get indirect block number if it will need it
+    Block indirect;
+    if ((offset + length) / disk->BLOCK_SIZE > POINTERS_PER_INODE) {
+        // make sure direct block is allocated
+        if (inode.Indirect == 0) {
+            return -1;
+        }
+        disk->read(inode.Indirect,indirect.Data);
+    }
+
+    size_t read = 0;
+    for (uint32_t block_num = start_block; read < length; block_num++) {
+        
+        // figure out which block we're reading
+        size_t block_to_read;
+        if (block_num < POINTERS_PER_INODE) {
+            block_to_read = inode.Direct[block_num];
+        } else {
+            block_to_read = indirect.Pointers[block_num-POINTERS_PER_INODE];
+        }
+
+        //make sure block is allocated
+        if (block_to_read == 0) {
+            return -1;
+        }
+
+        //get the block -- from either direct or indirect
+        Block b;
+        disk->read(block_to_read,b.Data);
+        size_t read_offset;
+        size_t read_length;
+
+        // if it's the first block read, have to start from an offset
+        // and read either until the end of the block, or the whole request
+        if (read == 0) {
+            read_offset = offset % disk->BLOCK_SIZE;
+            read_length = std::min(disk->BLOCK_SIZE - read_offset, length);
+        } else {
+            // otherwise, start from the beginning, and read
+            // either the whole block or the rest of the request
+            read_offset = 0;
+            read_length = std::min(disk->BLOCK_SIZE-0, length-read);
+        }
+        memcpy(data + read, b.Data + read_offset, read_length);
+        read += read_length;
+    }
     
-    memcpy(data, );
-    return 0;
+    return read;
 }
 
 // Write to inode --------------------------------------------------------------
