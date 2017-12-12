@@ -152,11 +152,8 @@ bool FileSystem::mount(Disk *disk) {
                 continue;
             }
             uint32_t n_blocks = (uint32_t)ceil(b.Inodes[inode].Size/(double)disk->BLOCK_SIZE);
-            printf("Inode %u has %d blocks: ",inode,n_blocks);
-
             // read all direct blocks
             for (uint32_t pointer = 0; pointer < POINTERS_PER_INODE && pointer < n_blocks; pointer++) {
-                printf("%d ",b.Inodes[inode].Direct[pointer]);
                 free_bitmap[b.Inodes[inode].Direct[pointer]] = 0;
             }
 
@@ -165,12 +162,9 @@ bool FileSystem::mount(Disk *disk) {
                 Block indirect;
                 disk->read(b.Inodes[inode].Indirect,indirect.Data);
                 for (uint32_t pointer = 0; pointer < n_blocks - POINTERS_PER_INODE; pointer++) {
-                    printf("%d ",indirect.Pointers[pointer]);
                     free_bitmap[indirect.Pointers[pointer]] = 0;
                 }
             }
-
-            printf("\n");
         }
     }
 
