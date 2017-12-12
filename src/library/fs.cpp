@@ -79,7 +79,11 @@ bool FileSystem::mount(Disk *disk) {
     free_bitmap = (uint32_t*)calloc(num_blocks,sizeof(uint32_t));
 
     //TODO: read inodes to determine which blocks are free?
-
+    Block block2;
+    disk->read(1, block.Data);
+    for (unsigned int i = 0; i < block.Super.Inodes; i++) {
+        free_bitmap[i] = block2.Inodes[i].Valid ? 1 : 0;
+    }
     return true;
 }
 
