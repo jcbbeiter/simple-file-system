@@ -232,7 +232,7 @@ bool FileSystem::remove(size_t inumber) {
         node.Direct[i] = 0;
     }
 
-     Free indirect blocks
+    // Free indirect blocks
     if (indir != 0) {
         disk->read(indir, block.Data);
         for (unsigned int j = 0; j < POINTERS_PER_BLOCK; j++) {
@@ -279,7 +279,6 @@ ssize_t FileSystem::read(size_t inumber, char *data, size_t length, size_t offse
     length = std::min(length, i.Size - offset);
     // Read block and copy to data; use memcpy
     
-    memcpy(data, );
     return 0;
 }
 
