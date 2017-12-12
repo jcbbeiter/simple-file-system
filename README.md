@@ -53,7 +53,7 @@ and setting the Valid member to zero (i.e. false)
 >       - How will you determine which blocks are free?
 
 Before the operation can succeed, the disk must not be mounted already.
-We must check the following: that the magic number is correct, that the number of disks
+We must check the following: that the magic number is correct, that the number of blocks
 described by the superblock is the same as the number of disks on the disk, that the
 number of inode blocks is reasonable, and that the number of inodes matches the total
 number of inodes that would be in that many blocks.
