@@ -13,8 +13,11 @@
 
 void FileSystem::debug(Disk *disk) {
     Block block;
-    unsigned int inode_count;
+    Block block2;
+    uint32_t indir;
+    unsigned int inode_block_count;
     std::string direct;
+    std::string indirect;
     // Read Superblock
     disk->read(0, block.Data);
 
@@ -29,27 +32,44 @@ void FileSystem::debug(Disk *disk) {
     printf("    %u inodes\n"         , block.Super.Inodes);
 
     // Read Inode blocks
-    inode_count = block.Super.Inodes;
-    disk->read(1, block.Data);
+    inode_block_count = block.Super.InodeBlocks;
 
-    for (unsigned int i = 0; i < inode_count; i++) {
-        direct = "";
-        for (unsigned int j = 0; j < POINTERS_PER_INODE; j++) {
-            if (block.Inodes[i].Direct[j] != 0) {
-                direct += std::to_string(block.Inodes[i].Direct[j]);
-                direct += " ";
+    for (unsigned int k = 0; k < inode_block_count; k++) {
+        disk->read(1+k, block.Data);
+        for (unsigned int i = 0; i < INODES_PER_BLOCK; i++) {
+            direct = "";
+            indirect = "";
+            if (!block.Inodes[i].Valid) {
+                continue;
             }
-        }
-        if (direct.length() > 0) {
-            direct.pop_back();
-        }
-        if (!block.Inodes[i].Valid) {
-            continue;
-        } else {
+            for (unsigned int j = 0; j < POINTERS_PER_INODE; j++) {
+                if (block.Inodes[i].Direct[j] != 0) {
+                    direct += std::to_string(block.Inodes[i].Direct[j]);
+                    direct += " ";
+                }
+            }
+            indir = block.Inodes[i].Indirect;
+            if (indir != 0) {
+                disk->read(indir, block2.Data);
+                for (unsigned int l = 0; l < POINTERS_PER_BLOCK; l++) {
+                    if (block2.Pointers[l] != 0) {
+                        indirect += std::to_string(block2.Pointers[l]);
+                        indirect += " ";
+                    }
+                }
+            }
             printf("Inode %u:\n", i);
             printf("    size: %u bytes\n"    , block.Inodes[i].Size);
-            printf("    direct blocks: %s\n" , direct.c_str());
-        }    
+            if (direct.length() > 0) {
+                direct.pop_back();
+                printf("    direct blocks: %s\n" , direct.c_str());
+            }
+            if (indirect.length() > 0) {
+                indirect.pop_back();
+                printf("    indirect block: %u\n", indir);
+                printf("    indirect data blocks: %s\n", indirect.c_str());
+            }
+        }
     }
 }
 
