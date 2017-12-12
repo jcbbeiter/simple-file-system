@@ -52,9 +52,24 @@ void FileSystem::debug(Disk *disk) {
 // Format file system ----------------------------------------------------------
 
 bool FileSystem::format(Disk *disk) {
+    // Check if mounted
+    if (disk->mounted()) {
+        return false;
+    }
     // Write superblock
+    Block block;
+    block.Super.MagicNumber = MAGIC_NUMBER;
+    block.Super.Blocks = disk->size();
+    block.Super.InodeBlocks = (size_t)(((float)disk->size()*0.1)+0.5);
+    block.Super.Inodes = INODES_PER_BLOCK*disk->size();
+    disk->write(0, block.Data);
 
     // Clear all other blocks
+    char clear[BUFSIZ] = {0};
+    for (size_t i=1; i<block.Super.Blocks; i++) {
+        disk->write(i, clear);
+    }
+
     return true;
 }
 
@@ -69,7 +84,16 @@ bool FileSystem::mount(Disk *disk) {
     if (disk->mounted()) {
         return false;
     }
+
+    if (block.Super.Inodes != block.Super.InodeBlocks * INODES_PER_BLOCK) {
+        return false;
+    }
+
+    if (block.Super.MagicNumber != MAGIC_NUMBER) {
+        return false;
+    }
     disk->mount();
+
     // Copy metadata
     num_blocks = block.Super.Blocks;
     num_inode_blocks = block.Super.InodeBlocks;
@@ -79,8 +103,12 @@ bool FileSystem::mount(Disk *disk) {
     free_bitmap = (uint32_t*)calloc(num_blocks,sizeof(uint32_t));
 
     //TODO: read inodes to determine which blocks are free?
+    Block block2;
+    disk->read(1, block.Data);
+    for (unsigned int i = 0; i < block.Super.Inodes; i++) {
+        free_bitmap[i] = block2.Inodes[i].Valid ? 1 : 0;
+    }
 
-   
     return true;
 }
 
