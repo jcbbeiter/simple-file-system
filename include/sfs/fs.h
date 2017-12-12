@@ -36,8 +36,11 @@ private:
     };
 
     // TODO: Internal helper functions
+    bool    load_inode(size_t inumber, Inode *node);
+    bool    save_inode(size_t inumber, Inode *node);
 
     // TODO: Internal member variables
+    Disk *disk;
 
 public:
     static void debug(Disk *disk);
