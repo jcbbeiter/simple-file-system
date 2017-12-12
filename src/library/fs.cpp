@@ -329,12 +329,7 @@ ssize_t FileSystem::read(size_t inumber, char *data, size_t length, size_t offse
         memcpy(data + read, b.Data + read_offset, read_length);
         read += read_length;
     }
-    
-<<<<<<< HEAD
-    return 0;
-=======
     return read;
->>>>>>> 0e469a6d2adb259c42f7eded0bfefca7fc1855cf
 }
 
 // Write to inode --------------------------------------------------------------
