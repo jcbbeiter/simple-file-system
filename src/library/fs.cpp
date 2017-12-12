@@ -98,6 +98,7 @@ bool FileSystem::mount(Disk *disk) {
     num_blocks = block.Super.Blocks;
     num_inode_blocks = block.Super.InodeBlocks;
     num_inodes = block.Super.Inodes;
+    this->disk = disk;
 
     // Allocate free block bitmap
     free_bitmap = (uint32_t*)calloc(num_blocks,sizeof(uint32_t));
@@ -105,7 +106,7 @@ bool FileSystem::mount(Disk *disk) {
     //TODO: read inodes to determine which blocks are free?
     Block block2;
     disk->read(1, block.Data);
-    for (unsigned int i = 0; i < block.Super.Inodes; i++) {
+    for (unsigned int i = 0; i < num_inodes; i++) {
         free_bitmap[i] = block2.Inodes[i].Valid ? 1 : 0;
     }
 
@@ -115,9 +116,26 @@ bool FileSystem::mount(Disk *disk) {
 // Create inode ----------------------------------------------------------------
 
 ssize_t FileSystem::create() {
-    // Locate free inode in inode table
 
+    // Locate free inode in inode table
+    unsigned int ind = -1;
+    for (unsigned int i = 0; i < num_inodes; i++) {
+        if (free_bitmap[i] == 1) {
+            ind = i;
+            break;
+        }
+    }
     // Record inode if found
+    if (ind == -1) {
+        return -1;
+    }
+    Inode i;
+    i.Valid = true;
+    i.Size = 0;
+    i.Direct = {0};
+    i.Indirect = 0;
+    save_inode(ind, &i);
+
     return 0;
 }
 
