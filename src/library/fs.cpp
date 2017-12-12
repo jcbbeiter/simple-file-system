@@ -227,7 +227,12 @@ bool FileSystem::remove(size_t inumber) {
 
 ssize_t FileSystem::stat(size_t inumber) {
     // Load inode information
-    return 0;
+    Inode i;
+    if (!load_inode(inumber,&i) || !i.Valid) {
+        return -1;
+    }
+
+    return i.Size;
 }
 
 // Read from inode -------------------------------------------------------------
