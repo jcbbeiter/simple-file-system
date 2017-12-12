@@ -71,8 +71,14 @@ bool FileSystem::mount(Disk *disk) {
     }
     disk->mount();
     // Copy metadata
+    num_blocks = block.Super.Blocks;
+    num_inode_blocks = block.Super.InodeBlocks;
+    num_inodes = block.Super.Inodes;
 
     // Allocate free block bitmap
+    free_bitmap = (uint32_t*)calloc(num_blocks,sizeof(uint32_t));
+
+    //TODO: read inodes to determine which blocks are free?
 
     return true;
 }
@@ -131,13 +137,15 @@ bool FileSystem::load_inode(size_t inumber, Inode *node) {
     size_t block_number = inumber / INODES_PER_BLOCK;
     size_t inode_offset = inumber % INODES_PER_BLOCK;
 
+    if (inumber >= num_inodes) {
+        return false;
+    }
+
     Block block;
     disk->read(block_number,block.Data);
 
     *node = block.Inodes[inode_offset];
 
-    //it was recommended to make this function return bool(for error), but I'm not sure
-    //if there is anything we can check... any errors would just be a disk error
     return true;
 }
 
@@ -148,13 +156,15 @@ bool FileSystem::save_inode(size_t inumber, Inode *node) {
     size_t block_number = inumber / INODES_PER_BLOCK;
     size_t inode_offset = inumber % INODES_PER_BLOCK;
 
+    if (inumber >= num_inodes) {
+        return false;
+    }
+
     Block block;
     disk->read(block_number,block.Data);
     block.Inodes[inode_offset] = *node;
     disk->write(block_number,block.Data);
 
-    //it was recommended to make this function return bool(for error), but I'm not sure
-    //if there is anything we can check... any errors would just be a disk error
     return true;
 }
 

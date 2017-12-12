@@ -41,6 +41,12 @@ private:
 
     // TODO: Internal member variables
     Disk *disk;
+    uint32_t num_blocks;
+    uint32_t num_inode_blocks;
+    uint32_t num_inodes;
+    uint32_t *free_bitmap;
+    
+    
 
 public:
     static void debug(Disk *disk);
