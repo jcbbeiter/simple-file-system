@@ -234,10 +234,15 @@ ssize_t FileSystem::stat(size_t inumber) {
 
 ssize_t FileSystem::read(size_t inumber, char *data, size_t length, size_t offset) {
     // Load inode information
-
+    Inode i;
+    if (!load_inode(inumber, &i)) {
+        return -1;
+    }
     // Adjust length
-
-    // Read block and copy to data
+    length = std::min(length, i.Size - offset);
+    // Read block and copy to data; use memcpy
+    
+    memcpy(data, );
     return 0;
 }
 
