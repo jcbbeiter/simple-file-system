@@ -52,9 +52,24 @@ void FileSystem::debug(Disk *disk) {
 // Format file system ----------------------------------------------------------
 
 bool FileSystem::format(Disk *disk) {
+    // Check if mounted
+    if (disk->mounted()) {
+        return false;
+    }
     // Write superblock
+    Block block;
+    block.Super.MagicNumber = MAGIC_NUMBER;
+    block.Super.Blocks = disk->size();
+    block.Super.InodeBlocks = (size_t)(((float)disk->size()*0.1)+0.5);
+    block.Super.Inodes = INODES_PER_BLOCK*disk->size();
+    disk->write(0, block.Data);
 
     // Clear all other blocks
+    char clear[BUFSIZ] = {0};
+    for (size_t i=1; i<block.Super.Blocks; i++) {
+        disk->write(i, clear);
+    }
+
     return true;
 }
 
