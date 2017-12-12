@@ -332,12 +332,119 @@ ssize_t FileSystem::read(size_t inumber, char *data, size_t length, size_t offse
     return read;
 }
 
+// Allocate free block --------------------------------------------------------------
+ssize_t FileSystem::allocate_free_block() {
+    int block = -1;
+    for (unsigned int i = 0; i < num_blocks; i++) {
+        if (free_bitmap[i]) {
+            free_bitmap[i] = 0;
+            block = i;
+            break;
+        }
+    }
+
+    // need to zero data block if we're allocating one
+    if (block != -1) {
+        char *data[disk->BLOCK_SIZE];
+        memset(data,0,disk->BLOCK_SIZE);
+        disk->write(block,data);
+    }
+
+    return block;
+}
+
 // Write to inode --------------------------------------------------------------
 
 ssize_t FileSystem::write(size_t inumber, char *data, size_t length, size_t offset) {
     // Load inode
+    Inode inode;
+    if (!load_inode(inumber, &inode) || offset > inode.Size) {
+        return -1;
+    }
+
+    size_t MAX_FILE_SIZE = disk->BLOCK_SIZE * (POINTERS_PER_INODE*POINTERS_PER_BLOCK);
+
+    // Adjust length
+    length = std::min(length, MAX_FILE_SIZE-offset);
     
-    // Write block and copy to data
+    uint32_t start_block = offset / disk->BLOCK_SIZE;
+    Block indirect;
+    bool read_indirect;
+
+    bool modified_inode = false;
+    bool modified_indirect = false;
+
+    // Write block and copy data
+    size_t written = 0;
+    for (uint32_t block_num = start_block; written < length; block_num++) {
+        
+        // figure out which block we're reading
+        size_t block_to_write;
+        if (block_num < POINTERS_PER_INODE) {
+            // Allocate block if necessary
+            if (inode.Direct[block_num] == 0) {
+                ssize_t allocated_block = allocate_free_block();
+                if (allocated_block == -1) {
+                    break;
+                }
+                inode.Direct[block_num] = allocated_block;
+                modified_inode = true;
+            }
+            block_to_write = inode.Direct[block_num];
+        } else { // Indirect block
+            // Allocate indirect block if necessary
+            if (inode.Indirect == 0) {
+                ssize_t allocated_block = allocate_free_block();
+                if (allocated_block == -1) {
+                    return written;
+                }
+                inode.Indirect = allocated_block;
+                modified_inode = true;
+            }
+
+            // Read indirect block if hasn't been read yet
+            if (!read_indirect) {
+                disk->read(inode.Indirect,indirect.Data);
+                read_indirect = true;
+            }
+
+            // Allocate block if necessary
+            if (indirect.Pointers[block_num - POINTERS_PER_INODE] == 0) {
+                ssize_t allocated_block = allocate_free_block();
+                if (allocated_block == -1) {
+                    break;
+                }
+                indirect.Pointers[block_num - POINTERS_PER_INODE] = allocated_block;
+            }
+            block_to_write = indirect.Pointers[block_num-POINTERS_PER_INODE];
+        }
+
+        /// HERE DOWN ------------------------------
+
+        //get the block -- from either direct or indirect
+        size_t write_offset;
+        size_t write_length;
+
+        // if it's the first block written, have to start from an offset
+        // and write either until the end of the block, or the whole request
+        if (written == 0) {
+            write_offset = offset % disk->BLOCK_SIZE;
+            write_length = std::min(disk->BLOCK_SIZE - write_offset, length);
+        } else {
+            // otherwise, start from the beginning, and write
+            // either the whole block or the rest of the request
+            write_offset = 0;
+            write_length = std::min(disk->BLOCK_SIZE, length-written);
+        }
+
+        // need to do the writing -- may have to read block
+        //memcpy(data + read, b.Data + read_offset, read_length);
+        //read += read_length;
+    }
+
+    // update inode size
+    // save inode and indirect if necessary
+    // return length
     return 0;
 }
 
