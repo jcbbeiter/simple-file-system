@@ -336,9 +336,9 @@ ssize_t FileSystem::allocate_free_block() {
 
     // need to zero data block if we're allocating one
     if (block != -1) {
-        char *data[disk->BLOCK_SIZE];
+        char data[disk->BLOCK_SIZE];
         memset(data,0,disk->BLOCK_SIZE);
-        disk->write(block,data);
+        disk->write(block,(char*)data);
     }
 
     return block;
@@ -390,7 +390,7 @@ ssize_t FileSystem::write(size_t inumber, char *data, size_t length, size_t offs
                     return written;
                 }
                 inode.Indirect = allocated_block;
-                modified_inode = true;
+                modified_indirect = true;
             }
 
             // Read indirect block if hasn't been read yet
@@ -406,11 +406,10 @@ ssize_t FileSystem::write(size_t inumber, char *data, size_t length, size_t offs
                     break;
                 }
                 indirect.Pointers[block_num - POINTERS_PER_INODE] = allocated_block;
+                modified_indirect = true;
             }
             block_to_write = indirect.Pointers[block_num-POINTERS_PER_INODE];
         }
-
-        /// HERE DOWN ------------------------------
 
         //get the block -- from either direct or indirect
         size_t write_offset;
@@ -425,18 +424,39 @@ ssize_t FileSystem::write(size_t inumber, char *data, size_t length, size_t offs
             // otherwise, start from the beginning, and write
             // either the whole block or the rest of the request
             write_offset = 0;
-            write_length = std::min(disk->BLOCK_SIZE, length-written);
+            write_length = std::min(disk->BLOCK_SIZE-0, length-written);
         }
 
-        // need to do the writing -- may have to read block
-        //memcpy(data + read, b.Data + read_offset, read_length);
-        //read += read_length;
+        char write_buffer[disk->BLOCK_SIZE];
+
+        // if we're not writing the whole block, need to copy what's there
+        if (write_length < disk->BLOCK_SIZE) {
+            disk->read(block_to_write,(char*)write_buffer);
+        }
+
+        // copy into buffer
+        memcpy(write_buffer + write_offset, data + written, write_length);
+        written += write_length;
     }
 
     // update inode size
+    uint32_t new_size = std::max((size_t)inode.Size, written + offset);
+    if (new_size != inode.Size) {
+        inode.Size = new_size;
+        modified_inode = true;
+    }
+
     // save inode and indirect if necessary
-    // return length
-    return 0;
+    if (modified_inode) {
+        save_inode(inumber,&inode);
+    }
+     
+    if (modified_indirect) {
+        disk->write(inode.Indirect,indirect.Data);
+    }
+
+    
+    return written;
 }
 
 // Load inode --------------------------------------------------------------
