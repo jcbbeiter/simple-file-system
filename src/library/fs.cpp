@@ -213,9 +213,7 @@ ssize_t FileSystem::create() {
 // Remove inode ----------------------------------------------------------------
 
 bool FileSystem::remove(size_t inumber) {
-    Block block;
     Inode node;
-    uint32_t indir;
 
     // Load inode information
     if (!load_inode(inumber, &node)) {
@@ -229,16 +227,14 @@ bool FileSystem::remove(size_t inumber) {
 
     // Free direct blocks
     for (unsigned int i = 0; i < POINTERS_PER_INODE; i++) {
-        node.Direct[i] = 0;
+        if (node.Direct[i] != 0) {
+            free_bitmap[node.Direct[i]] = 0;
+            node.Direct[i] = 0;
+        }
     }
 
     // Free indirect blocks
-    if (indir != 0) {
-        disk->read(indir, block.Data);
-        for (unsigned int j = 0; j < POINTERS_PER_BLOCK; j++) {
-            block.Pointers[j] = 0;
-        }
-    }
+    free_bitmap[node.Indirect] = 0;
 
     // Clear inode in inode table
     node.Indirect = 0;
@@ -247,10 +243,6 @@ bool FileSystem::remove(size_t inumber) {
     if (!save_inode(inumber, &node)) {
         return false;
     };
-    if (indir != 0) {
-        disk->write(indir, block.Data);
-    }
-    free_bitmap[inumber] = 0;
 
     return true;
 }
