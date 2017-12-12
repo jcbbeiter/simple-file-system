@@ -116,11 +116,43 @@ bool FileSystem::mount(Disk *disk) {
     // Allocate free block bitmap
     free_bitmap = (uint32_t*)calloc(num_blocks,sizeof(uint32_t));
 
-    //TODO: read inodes to determine which blocks are free?
-    Block block2;
-    disk->read(1, block.Data);
-    for (unsigned int i = 0; i < num_inodes; i++) {
-        free_bitmap[i] = block2.Inodes[i].Valid ? 1 : 0;
+    //set all blocks to free initially
+    for (uint32_t i = 0; i < num_blocks; i++) {
+        free_bitmap[i] = 1;
+    }
+
+    //TODO: read inodes to determine which blocks are free
+    for (uint32_t inode_block = 0; inode_block < num_inode_blocks; inode_block++) {
+        Block b;
+        disk->read(1+inode_block,b.Data);
+        for (uint32_t inode = 0; inode < INODES_PER_BLOCK; inode++) {
+            if (!b.Inodes[inode].Valid) {
+                continue;
+            }
+            uint32_t n_blocks = (uint32_t)ceil(b.Inodes[inode].Size/(double)disk->BLOCK_SIZE);
+            printf("Inode %u has %d blocks: ",inode,n_blocks);
+
+            for (uint32_t pointer = 0; pointer < POINTERS_PER_INODE && pointer < n_blocks; pointer++) {
+                printf("%d ",b.Inodes[inode].Direct[pointer]);
+                free_bitmap[b.Inodes[inode].Direct[pointer]] = 0;
+            }
+
+            //read indirect block if necessary
+            if (n_blocks > POINTERS_PER_INODE) {
+                Block indirect;
+                disk->read(b.Inodes[inode].Indirect,indirect.Data);
+                for (uint32_t pointer = 0; pointer < n_blocks - POINTERS_PER_INODE; pointer++) {
+                    printf("%d ",indirect.Pointers[pointer]);
+                    free_bitmap[indirect.Pointers[pointer]] = 0;
+                }
+            }
+
+
+
+            printf("\n");
+
+
+        }
     }
 
     return true;
