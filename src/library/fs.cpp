@@ -78,6 +78,7 @@ bool FileSystem::format(Disk *disk) {
     }
     // Write superblock
     Block block;
+    memset(block.Data,0,disk->BLOCK_SIZE);
     block.Super.MagicNumber = MAGIC_NUMBER;
     block.Super.Blocks = disk->size();
     block.Super.InodeBlocks = (size_t)(((float)disk->size()*0.1)+0.5);
@@ -235,14 +236,22 @@ bool FileSystem::remove(size_t inumber) {
     // Free direct blocks
     for (unsigned int i = 0; i < POINTERS_PER_INODE; i++) {
         if (node.Direct[i] != 0) {
-            free_bitmap[node.Direct[i]] = 0;
+            free_bitmap[node.Direct[i]] = 1;
             node.Direct[i] = 0;
         }
     }
 
     // Free indirect blocks
     if (node.Indirect != 0) {
-        free_bitmap[node.Indirect] = 0;
+        free_bitmap[node.Indirect] = 1;
+        Block b;
+        disk->read(node.Indirect,b.Data);
+        // Free blocks pointed to indirectly
+        for (unsigned int i = 0; i < POINTERS_PER_BLOCK; i++) {
+            if (b.Pointers[i] != 0) {
+                free_bitmap[b.Pointers[i]] = 1;
+            }
+        }
     }
     // Clear inode in inode table
     node.Indirect = 0;
@@ -369,7 +378,7 @@ ssize_t FileSystem::write(size_t inumber, char *data, size_t length, size_t offs
     
     uint32_t start_block = offset / disk->BLOCK_SIZE;
     Block indirect;
-    bool read_indirect;
+    bool read_indirect = false;
 
     bool modified_inode = false;
     bool modified_indirect = false;
