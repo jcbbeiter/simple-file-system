@@ -234,8 +234,9 @@ bool FileSystem::remove(size_t inumber) {
     }
 
     // Free indirect blocks
-    free_bitmap[node.Indirect] = 0;
-
+    if (node.Indirect != 0) {
+        free_bitmap[node.Indirect] = 0;
+    }
     // Clear inode in inode table
     node.Indirect = 0;
     node.Valid = 0;
