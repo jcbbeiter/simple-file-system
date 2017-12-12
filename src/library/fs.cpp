@@ -213,13 +213,45 @@ ssize_t FileSystem::create() {
 // Remove inode ----------------------------------------------------------------
 
 bool FileSystem::remove(size_t inumber) {
+    Block block;
+    Inode node;
+    uint32_t indir;
+
     // Load inode information
+    if (!load_inode(inumber, &node)) {
+        return false;
+    }
+    if (node.Valid == 0) {
+        return false;
+    }
+
+    indir = node.Indirect;
 
     // Free direct blocks
+    for (unsigned int i = 0; i < POINTERS_PER_INODE; i++) {
+        node.Direct[i] = 0;
+    }
 
-    // Free indirect blocks
+     Free indirect blocks
+    if (indir != 0) {
+        disk->read(indir, block.Data);
+        for (unsigned int j = 0; j < POINTERS_PER_BLOCK; j++) {
+            block.Pointers[j] = 0;
+        }
+    }
 
     // Clear inode in inode table
+    node.Indirect = 0;
+    node.Valid = 0;
+    node.Size = 0;
+    if (!save_inode(inumber, &node)) {
+        return false;
+    };
+    if (indir != 0) {
+        disk->write(indir, block.Data);
+    }
+    free_bitmap[inumber] = 0;
+
     return true;
 }
 
@@ -345,5 +377,4 @@ bool FileSystem::save_inode(size_t inumber, Inode *node) {
 
     return true;
 }
-
 // vim: set sts=4 sw=4 ts=8 expandtab ft=cpp:
