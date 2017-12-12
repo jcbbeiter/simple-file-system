@@ -135,7 +135,7 @@ bool FileSystem::mount(Disk *disk) {
     this->disk = disk;
 
     // Allocate free block bitmap
-    free_bitmap = (uint32_t*)calloc(num_blocks,sizeof(uint32_t));
+    free_bitmap = std::vector<int> (num_blocks,1);
 
     //set all blocks to free initially
     for (uint32_t i = 0; i < num_blocks; i++) {

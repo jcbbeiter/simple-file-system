@@ -5,6 +5,7 @@
 #include "sfs/disk.h"
 
 #include <stdint.h>
+#include <vector>
 
 class FileSystem {
 public:
@@ -44,7 +45,7 @@ private:
     uint32_t num_blocks;
     uint32_t num_inode_blocks;
     uint32_t num_inodes;
-    uint32_t *free_bitmap;
+    std::vector<int> free_bitmap;
     
     
 
