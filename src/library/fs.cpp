@@ -80,6 +80,7 @@ bool FileSystem::mount(Disk *disk) {
 
     //TODO: read inodes to determine which blocks are free?
 
+   
     return true;
 }
 
@@ -134,7 +135,7 @@ ssize_t FileSystem::write(size_t inumber, char *data, size_t length, size_t offs
 
 // Load inode --------------------------------------------------------------
 bool FileSystem::load_inode(size_t inumber, Inode *node) {
-    size_t block_number = inumber / INODES_PER_BLOCK;
+    size_t block_number = 1 + (inumber / INODES_PER_BLOCK);
     size_t inode_offset = inumber % INODES_PER_BLOCK;
 
     if (inumber >= num_inodes) {
@@ -153,7 +154,7 @@ bool FileSystem::load_inode(size_t inumber, Inode *node) {
 // Save inode --------------------------------------------------------------
 bool FileSystem::save_inode(size_t inumber, Inode *node) {
 
-    size_t block_number = inumber / INODES_PER_BLOCK;
+    size_t block_number = 1 + inumber / INODES_PER_BLOCK;
     size_t inode_offset = inumber % INODES_PER_BLOCK;
 
     if (inumber >= num_inodes) {
