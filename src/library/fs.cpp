@@ -223,8 +223,6 @@ bool FileSystem::remove(size_t inumber) {
         return false;
     }
 
-    indir = node.Indirect;
-
     // Free direct blocks
     for (unsigned int i = 0; i < POINTERS_PER_INODE; i++) {
         if (node.Direct[i] != 0) {
