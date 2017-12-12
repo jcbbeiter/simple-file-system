@@ -44,8 +44,8 @@ void FileSystem::debug(Disk *disk) {
             }
             for (unsigned int j = 0; j < POINTERS_PER_INODE; j++) {
                 if (block.Inodes[i].Direct[j] != 0) {
-                    direct += std::to_string(block.Inodes[i].Direct[j]);
                     direct += " ";
+                    direct += std::to_string(block.Inodes[i].Direct[j]);
                 }
             }
             indir = block.Inodes[i].Indirect;
@@ -53,21 +53,17 @@ void FileSystem::debug(Disk *disk) {
                 disk->read(indir, block2.Data);
                 for (unsigned int l = 0; l < POINTERS_PER_BLOCK; l++) {
                     if (block2.Pointers[l] != 0) {
-                        indirect += std::to_string(block2.Pointers[l]);
                         indirect += " ";
+                        indirect += std::to_string(block2.Pointers[l]);
                     }
                 }
             }
             printf("Inode %u:\n", i);
             printf("    size: %u bytes\n"    , block.Inodes[i].Size);
-            if (direct.length() > 0) {
-                direct.pop_back();
-            }
-            printf("    direct blocks: %s\n" , direct.c_str());
+            printf("    direct blocks:%s\n" , direct.c_str());
             if (indirect.length() > 0) {
-                indirect.pop_back();
                 printf("    indirect block: %u\n", indir);
-                printf("    indirect data blocks: %s\n", indirect.c_str());
+                printf("    indirect data blocks:%s\n", indirect.c_str());
             }
         }
     }
