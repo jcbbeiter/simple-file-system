@@ -125,4 +125,36 @@ ssize_t FileSystem::write(size_t inumber, char *data, size_t length, size_t offs
     return 0;
 }
 
+// Load inode --------------------------------------------------------------
+bool FileSystem::load_inode(size_t inumber, Inode *node) {
+    size_t block_number = inumber / INODES_PER_BLOCK;
+    size_t inode_offset = inumber % INODES_PER_BLOCK;
+
+    Block block;
+    disk->read(block_number,block.Data);
+
+    *node = block.Inodes[inode_offset];
+
+    //it was recommended to make this function return bool(for error), but I'm not sure
+    //if there is anything we can check... any errors would just be a disk error
+    return true;
+}
+
+
+// Save inode --------------------------------------------------------------
+bool FileSystem::save_inode(size_t inumber, Inode *node) {
+
+    size_t block_number = inumber / INODES_PER_BLOCK;
+    size_t inode_offset = inumber % INODES_PER_BLOCK;
+
+    Block block;
+    disk->read(block_number,block.Data);
+    block.Inodes[inode_offset] = *node;
+    disk->write(block_number,block.Data);
+
+    //it was recommended to make this function return bool(for error), but I'm not sure
+    //if there is anything we can check... any errors would just be a disk error
+    return true;
+}
+
 // vim: set sts=4 sw=4 ts=8 expandtab ft=cpp:
