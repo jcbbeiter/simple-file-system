@@ -7,6 +7,7 @@
 #include <assert.h>
 #include <stdio.h>
 #include <string.h>
+#include <cmath>
 
 // Debug file system -----------------------------------------------------------
 
@@ -38,6 +39,9 @@ void FileSystem::debug(Disk *disk) {
                 direct += std::to_string(block.Inodes[i].Direct[j]);
                 direct += " ";
             }
+        }
+        if (direct.length() > 0) {
+            direct.pop_back();
         }
         if (!block.Inodes[i].Valid) {
             continue;
@@ -92,6 +96,15 @@ bool FileSystem::mount(Disk *disk) {
     if (block.Super.MagicNumber != MAGIC_NUMBER) {
         return false;
     }
+
+    if (block.Super.Blocks < 0) {
+        return false;
+    }
+
+    if (block.Super.InodeBlocks != ceil(.1 * block.Super.Blocks)) {
+        return false;
+    }
+
     disk->mount();
 
     // Copy metadata
@@ -118,7 +131,7 @@ bool FileSystem::mount(Disk *disk) {
 ssize_t FileSystem::create() {
 
     // Locate free inode in inode table
-    unsigned int ind = -1;
+    int ind = -1;
     for (unsigned int i = 0; i < num_inodes; i++) {
         if (free_bitmap[i] == 1) {
             ind = i;
@@ -132,7 +145,9 @@ ssize_t FileSystem::create() {
     Inode i;
     i.Valid = true;
     i.Size = 0;
-    i.Direct = {0};
+    for (unsigned int j = 0; j < POINTERS_PER_INODE; j++) {
+        i.Direct[j] = 0;
+    }
     i.Indirect = 0;
     save_inode(ind, &i);
 
