@@ -6,8 +6,9 @@ This is the documentation for [Project 06] of [CSE.30341.FA17].
 Members
 -------
 
-1. Domer McDomerson (dmcdomer@nd.edu)
-2. Belle Fleur (bfleur@nd.edu)
+1. Alex Ayala (aayala4@nd.edu)
+2. Jacob Beiter (jbeiter@nd.edu)
+3. Steven Eisemann (seiseman@nd.edu)
 
 Design
 ------
