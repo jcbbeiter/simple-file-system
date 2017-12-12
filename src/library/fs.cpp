@@ -145,13 +145,16 @@ bool FileSystem::mount(Disk *disk) {
     for (uint32_t inode_block = 0; inode_block < num_inode_blocks; inode_block++) {
         Block b;
         disk->read(1+inode_block,b.Data);
+        // reads each inode
         for (uint32_t inode = 0; inode < INODES_PER_BLOCK; inode++) {
+            // if it's not valid, it has no blocks
             if (!b.Inodes[inode].Valid) {
                 continue;
             }
             uint32_t n_blocks = (uint32_t)ceil(b.Inodes[inode].Size/(double)disk->BLOCK_SIZE);
             printf("Inode %u has %d blocks: ",inode,n_blocks);
 
+            // read all direct blocks
             for (uint32_t pointer = 0; pointer < POINTERS_PER_INODE && pointer < n_blocks; pointer++) {
                 printf("%d ",b.Inodes[inode].Direct[pointer]);
                 free_bitmap[b.Inodes[inode].Direct[pointer]] = 0;
@@ -167,11 +170,7 @@ bool FileSystem::mount(Disk *disk) {
                 }
             }
 
-
-
             printf("\n");
-
-
         }
     }
 
@@ -184,12 +183,22 @@ ssize_t FileSystem::create() {
 
     // Locate free inode in inode table
     int ind = -1;
-    for (unsigned int i = 0; i < num_inodes; i++) {
-        if (free_bitmap[i] == 1) {
-            ind = i;
-            break;
+    for (uint32_t inode_block = 0; inode_block < num_inode_blocks; inode_block++) {
+        Block b;
+        disk->read(1+inode_block,b.Data);
+        // reads each inode
+        for (uint32_t inode = 0; inode < INODES_PER_BLOCK; inode++) {
+            // if it's not valid, it's free to be written
+            if (!b.Inodes[inode].Valid) {
+                ind = inode + INODES_PER_BLOCK*inode_block;
+                break;
+            }
+            if (ind != -1) {
+                break;
+            }
         }
     }
+
     // Record inode if found
     if (ind == -1) {
         return -1;
@@ -203,7 +212,7 @@ ssize_t FileSystem::create() {
     i.Indirect = 0;
     save_inode(ind, &i);
 
-    return 0;
+    return ind;
 }
 
 // Remove inode ----------------------------------------------------------------
