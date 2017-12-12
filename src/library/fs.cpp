@@ -13,7 +13,7 @@
 void FileSystem::debug(Disk *disk) {
     Block block;
     unsigned int inode_count;
-    unsigned int direct;
+    std::string direct;
     // Read Superblock
     disk->read(0, block.Data);
 
@@ -32,10 +32,11 @@ void FileSystem::debug(Disk *disk) {
     disk->read(1, block.Data);
 
     for (unsigned int i = 0; i < inode_count; i++) {
-        direct = 0;
+        direct = "";
         for (unsigned int j = 0; j < POINTERS_PER_INODE; j++) {
             if (block.Inodes[i].Direct[j] != 0) {
-                direct += 1;
+                direct += std::to_string(block.Inodes[i].Direct[j]);
+                direct += " ";
             }
         }
         if (!block.Inodes[i].Valid) {
@@ -43,7 +44,7 @@ void FileSystem::debug(Disk *disk) {
         } else {
             printf("Inode %u:\n", i);
             printf("    size: %u bytes\n"    , block.Inodes[i].Size);
-            printf("    direct blocks: %u\n" , direct);
+            printf("    direct blocks: %s\n" , direct.c_str());
         }    
     }
 }
