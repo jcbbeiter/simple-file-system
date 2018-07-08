@@ -153,16 +153,6 @@ We will update the size field of the inode if we grew the data at all (instead
 of overwriting), and update the Direct array if we allocated a new direct block,
 and the Indirect pointer if we allocated the indirect block
 
-Errata
-------
-
-> Describe any known errors, bugs, or deviations from the requirements.
-
-Extra Credit
-------------
-
-> Describe what extra credit (if any) that you implemented.
-
 [Project 06]:       https://www3.nd.edu/~pbui/teaching/cse.30341.fa17/project06.html
 [CSE.30341.FA17]:   https://www3.nd.edu/~pbui/teaching/cse.30341.fa17/
 [Google Drive]:     https://drive.google.com
